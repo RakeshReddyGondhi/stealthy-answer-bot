@@ -21,6 +21,8 @@ async function checkAdminPermission() {
 }
 
 // Optional: For live denial with websockets
+// Uncomment the code below to enable instant disable via WebSocket
+/*
 let ws;
 function initWebSocketForAdmin() {
   ws = new (require('ws'))('wss://admin.mycompany.com/socket');
@@ -30,6 +32,7 @@ function initWebSocketForAdmin() {
     }
   });
 }
+*/
 
 let win;
 
@@ -46,24 +49,24 @@ async function startApp() {
   });
 
   // Step 3: Load your React index.html or dev URL
-
   win.loadURL('file://' + __dirname + '/dist/index.html');
 
-
-  // Step 4: Poll admin permission every 60 seconds
+  // Step 4: Continuous admin permission check every 1 minute (60 seconds)
+  // If permission is revoked, immediately force quit the app
   setInterval(async () => {
     let stillAllowed = await checkAdminPermission();
     if (!stillAllowed) {
       win.close();
-      app.quit();
+      app.quit(); // Force quit immediately when admin revokes permission
     }
-  }, 60000);
+  }, 60000); // Check every 60000ms = 1 minute
 
   // Step 5: Hide window even when ready
   win.once('ready-to-show', () => win.hide());
 
   // Step 6: Optionally start websocket for instant deny
-  initWebSocketForAdmin();
+  // Uncomment the line below to enable WebSocket-based instant disable
+  // initWebSocketForAdmin();
 }
 
 // Start the app
