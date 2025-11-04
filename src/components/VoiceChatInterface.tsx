@@ -28,11 +28,20 @@ const VoiceChatInterface = () => {
     }
   }, [messages]);
 
+  // Cleanup audio recorder on component unmount
+  useEffect(() => {
+    return () => {
+      if (recorderRef.current) {
+        recorderRef.current.stop();
+        recorderRef.current = null;
+      }
+    };
+  }, []);
+
   const startListening = async () => {
     try {
       const recorder = new VoiceRecorder();
       recorderRef.current = recorder;
-
       await recorder.initialize(
         // On speech detected
         () => {
@@ -45,7 +54,6 @@ const VoiceChatInterface = () => {
           await processAudio(audioBlob);
         }
       );
-
       setIsListening(true);
       toast({
         title: 'Listening',
@@ -73,7 +81,6 @@ const VoiceChatInterface = () => {
 
   const processAudio = async (audioBlob: Blob) => {
     setIsProcessing(true);
-
     try {
       // Convert audio to base64
       const base64Audio = await blobToBase64(audioBlob);
@@ -103,7 +110,8 @@ const VoiceChatInterface = () => {
 
       // Get AI response
       console.log('Getting AI response...');
-      const conversationHistory = messages.map(msg => ({
+      // Fix: Include the user's latest message in the conversation history
+      const conversationHistory = [...messages, userMessage].map(msg => ({
         role: msg.role,
         content: msg.content,
       }));
@@ -128,7 +136,6 @@ const VoiceChatInterface = () => {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMessage]);
-
     } catch (error) {
       console.error('Error processing audio:', error);
       toast({
@@ -204,7 +211,9 @@ const VoiceChatInterface = () => {
                       >
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                         <p className="text-xs opacity-70 mt-2">
-                          {message.timestamp.toLocaleTimeString()}
+                          {message.timestamp instanceof Date 
+                            ? message.timestamp.toLocaleTimeString()
+                            : new Date(message.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
                     </div>
