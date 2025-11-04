@@ -1,6 +1,5 @@
 const { app, BrowserWindow } = require('electron');
 const fetch = require('node-fetch'); // If using Node 14+, use global fetch
-
 const adminUrl = 'https://admin.mycompany.com/api/permit';
 
 function getClientId() {
@@ -20,9 +19,6 @@ async function checkAdminPermission() {
   }
 }
 
-// Optional: For live denial with websockets
-// Uncomment the code below to enable instant disable via WebSocket
-/*
 let ws;
 function initWebSocketForAdmin() {
   ws = new (require('ws'))('wss://admin.mycompany.com/socket');
@@ -32,10 +28,8 @@ function initWebSocketForAdmin() {
     }
   });
 }
-*/
 
 let win;
-
 async function startApp() {
   // Step 1: Ask for admin permission
   let allowed = await checkAdminPermission();
@@ -64,9 +58,8 @@ async function startApp() {
   // Step 5: Hide window even when ready
   win.once('ready-to-show', () => win.hide());
 
-  // Step 6: Optionally start websocket for instant deny
-  // Uncomment the line below to enable WebSocket-based instant disable
-  // initWebSocketForAdmin();
+  // Step 6: Enable WebSocket-based instant disable
+  initWebSocketForAdmin();
 }
 
 // Start the app
