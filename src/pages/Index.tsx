@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Users, Bot, Lock, Loader2 } from 'lucide-react';
+import { Shield, Users, Bot, Lock, Loader2, Mic } from 'lucide-react';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -38,11 +38,11 @@ const Index = () => {
             AI Help Desk
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Secure, AI-powered assistance with admin-controlled access. Get answers to your questions after admin approval.
+            Secure, AI-powered assistance with voice and text. Get instant answers or submit requests for admin approval.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-6 mb-16 max-w-6xl mx-auto">
           <Card className="shadow-[var(--shadow-card)] border-2 hover:border-primary/50 transition-[var(--transition-smooth)]">
             <CardHeader>
               <Lock className="w-12 h-12 text-primary mb-4" />
@@ -65,6 +65,16 @@ const Index = () => {
 
           <Card className="shadow-[var(--shadow-card)] border-2 hover:border-primary/50 transition-[var(--transition-smooth)]">
             <CardHeader>
+              <Mic className="w-12 h-12 text-primary mb-4" />
+              <CardTitle>Voice Chat</CardTitle>
+              <CardDescription>
+                Speak naturally and get instant AI responses - no login required
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="shadow-[var(--shadow-card)] border-2 hover:border-primary/50 transition-[var(--transition-smooth)]">
+            <CardHeader>
               <Users className="w-12 h-12 text-primary mb-4" />
               <CardTitle>User Dashboard</CardTitle>
               <CardDescription>
@@ -74,16 +84,27 @@ const Index = () => {
           </Card>
         </div>
 
-        <div className="text-center">
-          <Button 
-            size="lg" 
-            onClick={() => navigate('/auth')}
-            className="text-lg px-8 py-6 shadow-[var(--shadow-elevated)]"
-          >
-            Get Started
-          </Button>
-          <p className="text-sm text-muted-foreground mt-4">
-            Sign in or create an account to access the help desk
+        <div className="text-center space-y-4">
+          <div className="flex gap-4 justify-center">
+            <Button 
+              size="lg" 
+              onClick={() => navigate('/voice-chat')}
+              variant="outline"
+              className="text-lg px-8 py-6 shadow-[var(--shadow-elevated)]"
+            >
+              <Mic className="mr-2 h-5 w-5" />
+              Try Voice Chat
+            </Button>
+            <Button 
+              size="lg" 
+              onClick={() => navigate('/auth')}
+              className="text-lg px-8 py-6 shadow-[var(--shadow-elevated)]"
+            >
+              Get Started
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Try voice chat instantly or sign in for managed help desk access
           </p>
         </div>
       </div>
