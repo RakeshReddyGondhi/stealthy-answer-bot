@@ -1,9 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { VoiceRecorder, blobToBase64 } from '@/utils/voiceRecorder';
+import { useScreenShareActive } from '@/hooks/useScreenShareActive';
 
 const VoiceChatInterface = () => {
   const recorderRef = useRef<VoiceRecorder | null>(null);
+  const [conversationText, setConversationText] = useState<string>('');
+  const isScreenSharing = useScreenShareActive();
 
   // Auto-start listening when component mounts
   useEffect(() => {
@@ -59,7 +62,10 @@ const VoiceChatInterface = () => {
       console.log('Transcription:', data.transcription);
       console.log('AI Response:', data.response);
 
-      // Play audio response
+      // Update conversation text with the latest AI answer
+      setConversationText(data.response);
+
+      // Play audio response (always, regardless of screen sharing status)
       if (data.audioResponse) {
         const audio = new Audio(`data:audio/mpeg;base64,${data.audioResponse}`);
         await audio.play();
@@ -70,8 +76,29 @@ const VoiceChatInterface = () => {
     }
   };
 
-  // Return null - no UI rendered
-  return null;
+  // Show answer box only when NOT screen sharing
+  if (isScreenSharing) {
+    return null;
+  }
+
+  return (
+    <div style={{
+      position: 'fixed',
+      bottom: '20px',
+      right: '20px',
+      maxWidth: '300px',
+      padding: '15px',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      color: 'white',
+      borderRadius: '8px',
+      fontSize: '14px',
+      zIndex: 9999,
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+    }}>
+      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Answer:</div>
+      <div>{conversationText || 'Listening...'}</div>
+    </div>
+  );
 };
 
 export default VoiceChatInterface;
