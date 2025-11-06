@@ -1,12 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { VoiceRecorder, blobToBase64 } from '@/utils/voiceRecorder';
-import { useScreenShareActive } from '@/hooks/useScreenShareActive';
+import { Mic, Bot, User } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 
 const VoiceChatInterface = () => {
   const recorderRef = useRef<VoiceRecorder | null>(null);
-  const [conversationText, setConversationText] = useState<string>('');
-  const isScreenSharing = useScreenShareActive();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-start listening when component mounts
   useEffect(() => {
@@ -30,9 +39,11 @@ const VoiceChatInterface = () => {
         // On speech detected
         () => {
           console.log('Speech detected, recording...');
+          setIsListening(true);
         },
         // On silence detected - process audio
         async (audioBlob) => {
+          setIsListening(false);
           await processAudio(audioBlob);
         }
       );
@@ -62,8 +73,12 @@ const VoiceChatInterface = () => {
       console.log('Transcription:', data.transcription);
       console.log('AI Response:', data.response);
 
-      // Update conversation text with the latest AI answer
-      setConversationText(data.response);
+      // Add messages to conversation
+      setMessages(prev => [
+        ...prev,
+        { role: 'user', content: data.transcription, timestamp: new Date() },
+        { role: 'assistant', content: data.response, timestamp: new Date() }
+      ]);
 
       // Play audio response (always, regardless of screen sharing status)
       if (data.audioResponse) {
@@ -76,8 +91,72 @@ const VoiceChatInterface = () => {
     }
   };
 
-  // No visible UI - all functionality runs in background
-  return null;
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background p-8">
+      <div className="max-w-4xl mx-auto">
+        <Card className="shadow-[var(--shadow-card)] border-2">
+          <div className="p-6 border-b bg-gradient-to-r from-primary/10 to-accent/10">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary rounded-full">
+                <Mic className={`w-6 h-6 text-primary-foreground ${isListening ? 'animate-pulse' : ''}`} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Voice Chat</h1>
+                <p className="text-sm text-muted-foreground">
+                  {isListening ? 'Listening...' : 'Speak naturally to chat'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <ScrollArea className="h-[500px]">
+            <div ref={scrollRef} className="p-6 space-y-4">
+              {messages.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Mic className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p>Start speaking to begin the conversation</p>
+                </div>
+              ) : (
+                messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex gap-3 ${message.role === 'assistant' ? 'flex-row' : 'flex-row-reverse'}`}
+                  >
+                    <div className={`p-2 rounded-full ${message.role === 'assistant' ? 'bg-primary' : 'bg-accent'}`}>
+                      {message.role === 'assistant' ? (
+                        <Bot className="w-5 h-5 text-primary-foreground" />
+                      ) : (
+                        <User className="w-5 h-5 text-accent-foreground" />
+                      )}
+                    </div>
+                    <div
+                      className={`flex-1 p-4 rounded-lg ${
+                        message.role === 'assistant'
+                          ? 'bg-muted'
+                          : 'bg-primary/10'
+                      }`}
+                    >
+                      <p className="text-sm">{message.content}</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {message.timestamp.toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </Card>
+      </div>
+    </div>
+  );
 };
 
 export default VoiceChatInterface;
