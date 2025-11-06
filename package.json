@@ -11,7 +11,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview,
+        "electron": "electron .",
+        "electron:build": "npm run build && electron-builder",
+        "dist:win": "npm run build && electron-builder --win"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -91,7 +94,18 @@
   "build": {
     "appId": "com.stealthy.answerbot",
     "win": {
-      "target": "nsis"
+      "target": "nsis,
+            "icon": "public/icon.png",
+            "productName": "Stealthy Answer Bot",
+            "directories": {
+                      "output": "dist",
+                      "buildResources": "build"
+                    },
+            "files": [
+                      "dist/**/*",
+                      "main.js",
+                      "package.json"
+                    ]
     }
   }
 }
