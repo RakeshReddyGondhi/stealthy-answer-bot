@@ -76,29 +76,8 @@ const VoiceChatInterface = () => {
     }
   };
 
-  // Show answer box only when NOT screen sharing
-  if (isScreenSharing) {
-    return null;
-  }
-
-  return (
-    <div style={{
-      position: 'fixed',
-      bottom: '20px',
-      right: '20px',
-      maxWidth: '300px',
-      padding: '15px',
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      color: 'white',
-      borderRadius: '8px',
-      fontSize: '14px',
-      zIndex: 9999,
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
-    }}>
-      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Answer:</div>
-      <div>{conversationText || 'Listening...'}</div>
-    </div>
-  );
+  // No visible UI - all functionality runs in background
+  return null;
 };
 
 export default VoiceChatInterface;
