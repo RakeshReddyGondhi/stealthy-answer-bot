@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { VoiceRecorder, blobToBase64 } from '@/utils/voiceRecorder';
 import { Mic, Bot, User } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -116,9 +115,8 @@ const VoiceChatInterface = () => {
             </div>
           </div>
 
-          <ScrollArea className="h-[500px]">
-            <div ref={scrollRef} className="p-6 space-y-4">
-              {messages.length === 0 ? (
+
+            <div ref={scrollRef} className="h-[500px] overflow-y-auto p-6 space-y-4">              {messages.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Mic className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p>Start speaking to begin the conversation</p>
@@ -152,7 +150,6 @@ const VoiceChatInterface = () => {
                 ))
               )}
             </div>
-          </ScrollArea>
         </Card>
       </div>
     </div>
