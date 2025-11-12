@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,14 +9,10 @@ import { Label } from '@/components/ui/label';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+import type { Tables } from '@/integrations/supabase/client';
+
 interface AdminRequestCardProps {
-  request: {
-    id: string;
-    title: string;
-    question: string;
-    status: string;
-    created_at: string;
-    admin_notes: string | null;
+  request: Tables['help_requests']['Row'] & {
     profiles: {
       email: string;
       full_name: string | null;
@@ -25,13 +21,62 @@ interface AdminRequestCardProps {
   onUpdate: () => void;
 }
 
-const AdminRequestCard = ({ request, onUpdate }: AdminRequestCardProps) => {
+const AdminRequestCard = ({ request: initialRequest, onUpdate }: AdminRequestCardProps) => {
   const { user } = useAuth();
-  const [adminNotes, setAdminNotes] = useState(request.admin_notes || '');
+  const [request, setRequest] = useState(initialRequest);
+  const [adminNotes, setAdminNotes] = useState(initialRequest.admin_notes || '');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleStatusUpdate = async (newStatus: 'approved' | 'denied') => {
+  useEffect(() => {
+    // Subscribe to request changes
+    const channel = supabase
+      .channel(`help_request_${request.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'help_requests',
+          filter: `id=eq.${request.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            setRequest(current => ({
+              ...current,
+              ...payload.new,
+              profiles: current.profiles // Preserve profiles data
+            }));
+            if (payload.new.admin_notes) {
+              setAdminNotes(payload.new.admin_notes);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // Clean up subscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [request.id]);
+
+  // Keep local state in sync with prop updates
+  useEffect(() => {
+    setRequest(initialRequest);
+    setAdminNotes(initialRequest.admin_notes || '');
+  }, [initialRequest]);
+
+  const handleStatusUpdate = async (newStatus: Tables['help_requests']['Row']['status']) => {
+    if (!user?.id) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to perform this action',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase
@@ -39,12 +84,33 @@ const AdminRequestCard = ({ request, onUpdate }: AdminRequestCardProps) => {
         .update({
           status: newStatus,
           admin_notes: adminNotes,
-          approved_by: user?.id,
+          approved_by: user.id,
           approved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
-        .eq('id', request.id);
+        .eq('id', request.id)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Automatically set status to answered if there's an AI response
+      if (newStatus === 'approved') {
+        const { data: aiResponses } = await supabase
+          .from('ai_responses')
+          .select('*')
+          .eq('request_id', request.id);
+
+        if (aiResponses && aiResponses.length > 0) {
+          await supabase
+            .from('help_requests')
+            .update({
+              status: 'answered',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', request.id);
+        }
+      }
 
       toast({
         title: 'Success',
@@ -53,6 +119,7 @@ const AdminRequestCard = ({ request, onUpdate }: AdminRequestCardProps) => {
 
       onUpdate();
     } catch (error) {
+      console.error('Error updating request:', error);
       toast({
         title: 'Error',
         description: 'Failed to update request',

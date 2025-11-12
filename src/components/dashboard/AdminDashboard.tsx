@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, CheckCircle, XCircle, Clock, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AdminRequestCard from './AdminRequestCard';
+import useAdminControl from '@/hooks/useAdminControl';
 
 interface HelpRequest {
   id: string;
@@ -27,6 +28,8 @@ const AdminDashboard = () => {
   const { signOut } = useAuth();
   const [requests, setRequests] = useState<HelpRequest[]>([]);
   const { toast } = useToast();
+  const { appLocked, setUserDenied, setGlobalLocked, reload } = useAdminControl();
+  const [targetUserId, setTargetUserId] = useState("");
 
   useEffect(() => {
     loadRequests();
@@ -92,6 +95,32 @@ const AdminDashboard = () => {
     await signOut();
   };
 
+  const handleSetGlobal = async (flag: boolean) => {
+    try {
+      await setGlobalLocked(flag);
+      toast({ title: 'Success', description: `Global ${flag ? 'locked' : 'unlocked'}.` });
+      await reload();
+    } catch (e) {
+      toast({ title: 'Error', description: 'Failed to set global lock', variant: 'destructive' });
+    }
+  };
+
+  const handleDenyUser = async (flag: boolean) => {
+    if (!targetUserId) {
+      toast({ title: 'Error', description: 'Please enter a user id', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      await setUserDenied(targetUserId, flag);
+      toast({ title: 'Success', description: `User ${flag ? 'denied' : 'allowed'}.` });
+      setTargetUserId("");
+      await reload();
+    } catch (e) {
+      toast({ title: 'Error', description: 'Failed to update user deny', variant: 'destructive' });
+    }
+  };
+
   const pendingRequests = requests.filter(r => r.status === 'pending');
   const approvedRequests = requests.filter(r => r.status === 'approved' || r.status === 'answered');
   const deniedRequests = requests.filter(r => r.status === 'denied');
@@ -115,6 +144,38 @@ const AdminDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <section className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">Global App Lock</p>
+              <div className="flex items-center gap-2 mt-3">
+                <Badge>{appLocked ? 'Locked' : 'Open'}</Badge>
+                <Button onClick={() => handleSetGlobal(!appLocked)} variant="ghost">{appLocked ? 'Unlock' : 'Lock'}</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">Deny / Allow User</p>
+              <div className="flex gap-2 mt-3">
+                <input value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} placeholder="user id (uuid)" className="flex-1 rounded-md border px-2 py-1" />
+                <Button onClick={() => handleDenyUser(true)} variant="destructive">Deny</Button>
+                <Button onClick={() => handleDenyUser(false)} variant="secondary">Allow</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">Quick Actions</p>
+              <div className="flex gap-2 mt-3">
+                <Button onClick={loadRequests} variant="outline">Refresh Requests</Button>
+                <Button onClick={reload} variant="outline">Refresh Controls</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardContent className="flex items-center justify-between p-6">

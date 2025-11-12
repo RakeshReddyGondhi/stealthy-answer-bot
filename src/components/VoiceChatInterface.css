@@ -1,0 +1,45 @@
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+}
+
+.answer-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 42rem;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.97);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: fadeInOut 8s ease-in-out forwards;
+  z-index: 1000;
+  pointer-events: none; /* Makes the element click-through */
+  user-select: none; /* Prevents text selection */
+}
+
+.answer-text {
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+  text-align: center;
+  background: transparent;
+  mix-blend-mode: hard-light;
+}

@@ -1,0 +1,180 @@
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
+
+type UserSession = Database['public']['Tables']['user_sessions']['Row'];
+type SessionStatus = UserSession['status'];
+
+interface SessionState {
+  sessionId: string | null;
+  isApproved: boolean;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+export const useSession = () => {
+  const { user } = useAuth();
+  const [state, setState] = useState<SessionState>({
+    sessionId: null,
+    isApproved: false,
+    isLoading: true,
+    error: null
+  });
+
+  const heartbeatIntervalRef = useRef<number>();
+  const sessionSubscriptionRef = useRef<ReturnType<typeof supabase.channel>>();
+  const blockSubscriptionRef = useRef<ReturnType<typeof supabase.channel>>();
+
+  const updateLastActive = useCallback(async (sessionId: string) => {
+    if (!sessionId) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_sessions')
+        .update({ last_active: new Date().toISOString() })
+        .eq('id', sessionId);
+
+      if (error) {
+        console.error('Failed to update last_active:', error);
+      }
+    } catch (error) {
+      console.error('Error updating last_active:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setState(prev => ({ ...prev, isLoading: false, isApproved: false }));
+      return;
+    }
+
+    const startSession = async () => {
+      try {
+        const deviceInfo = {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          language: navigator.language,
+          screenResolution: `${window.screen.width}x${window.screen.height}`
+        };
+
+        const { data, error } = await supabase
+          .from('user_sessions')
+          .insert({
+            user_id: user.id,
+            ip_address: '(fetching...)', // Will be set by edge function
+            device_info: JSON.stringify(deviceInfo),
+            status: 'pending'
+          } as Database['public']['Tables']['user_sessions']['Insert'])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setState(prev => ({
+          ...prev,
+          sessionId: data.id,
+          isLoading: false
+        }));
+
+        // Setup session status subscription
+        sessionSubscriptionRef.current = supabase
+          .channel(`session-${data.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'user_sessions',
+              filter: `id=eq.${data.id}`
+            },
+            (payload: RealtimePostgresChangesPayload<{ status: SessionStatus }>) => {
+              if (payload.new?.status) {
+                setState(prev => ({
+                  ...prev,
+                  isApproved: payload.new.status === 'approved'
+                }));
+              }
+            }
+          )
+          .subscribe();
+
+        // Start heartbeat
+        heartbeatIntervalRef.current = window.setInterval(
+          () => updateLastActive(data.id),
+          60000
+        );
+
+      } catch (error) {
+        console.error('Error starting session:', error);
+        setState(prev => ({
+          ...prev,
+          error: error as Error,
+          isLoading: false
+        }));
+      }
+    };
+
+    // Start session and check for blocks
+    startSession();
+
+    // Setup block monitoring
+    const setupBlockMonitoring = async () => {
+      try {
+        // Check current block status
+        const { data: isBlocked, error } = await supabase
+          .rpc('is_user_blocked', { user_id: user.id });
+
+        if (error) throw error;
+
+        if (isBlocked) {
+          setState(prev => ({ ...prev, isApproved: false }));
+        }
+
+        // Monitor for new blocks
+        blockSubscriptionRef.current = supabase
+          .channel('user-blocks')
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'user_blocks',
+              filter: `user_id=eq.${user.id}`
+            },
+            () => {
+              setState(prev => ({ ...prev, isApproved: false }));
+            }
+          )
+          .subscribe();
+      } catch (error) {
+        console.error('Error setting up block monitoring:', error);
+      }
+    };
+
+    setupBlockMonitoring();
+
+    // Cleanup
+    return () => {
+      if (heartbeatIntervalRef.current) {
+        window.clearInterval(heartbeatIntervalRef.current);
+      }
+      if (sessionSubscriptionRef.current) {
+        supabase.removeChannel(sessionSubscriptionRef.current);
+      }
+      if (blockSubscriptionRef.current) {
+        supabase.removeChannel(blockSubscriptionRef.current);
+      }
+    };
+  }, [user, updateLastActive]);
+
+  return {
+    ...state,
+    updateLastActive: state.sessionId ? 
+      () => updateLastActive(state.sessionId) : 
+      () => Promise.resolve()
+  };
+};
+
+export default useSession;

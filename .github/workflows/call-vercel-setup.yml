@@ -1,0 +1,23 @@
+name: Call Vercel DB Setup
+
+on:
+  workflow_dispatch: {}
+  # optionally run after a deployment or push to main
+  # push:
+  #   branches: [ main ]
+
+jobs:
+  call-setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Vercel Setup Endpoint
+        env:
+          VERCEL_SETUP_URL: ${{ secrets.VERCEL_SETUP_URL }} # set this in the repository Secrets
+          SETUP_TOKEN: ${{ secrets.SETUP_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_SETUP_URL" ] || [ -z "$SETUP_TOKEN" ]; then
+            echo "Missing secrets VERCEL_SETUP_URL or SETUP_TOKEN"; exit 1;
+          fi
+          echo "Calling $VERCEL_SETUP_URL"
+          resp=$(curl -s -X POST -H "x-setup-token: $SETUP_TOKEN" "$VERCEL_SETUP_URL")
+          echo "Response: $resp"

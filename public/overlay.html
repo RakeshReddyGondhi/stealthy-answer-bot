@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            overflow: hidden;
+            user-select: none;
+        }
+        #answer-container {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            max-width: 80%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        #answer-container.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="answer-container"></div>
+    <script>
+        const { ipcRenderer } = require('electron');
+        const container = document.getElementById('answer-container');
+        
+        ipcRenderer.on('show-answer', (event, answer) => {
+            container.textContent = answer;
+            container.classList.add('visible');
+            
+            // Auto-hide after 8 seconds
+            setTimeout(() => {
+                container.classList.remove('visible');
+            }, 8000);
+        });
+    </script>
+</body>
+</html>

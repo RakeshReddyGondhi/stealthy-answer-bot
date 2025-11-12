@@ -8,11 +8,13 @@ export function useScreenShareActive(): boolean {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   useEffect(() => {
-    function handler(e: any) {
-      setIsScreenSharing(e?.detail?.active === true);
+    function handler(e: Event) {
+      // The custom event is expected to be a CustomEvent with a detail shape { active?: boolean }
+      const ev = e as CustomEvent<{ active?: boolean }>;
+      setIsScreenSharing(ev?.detail?.active === true);
     }
-    window.addEventListener("screensharing", handler);
-    return () => window.removeEventListener("screensharing", handler);
+    window.addEventListener("screensharing", handler as EventListener);
+    return () => window.removeEventListener("screensharing", handler as EventListener);
   }, []);
 
   return isScreenSharing;
