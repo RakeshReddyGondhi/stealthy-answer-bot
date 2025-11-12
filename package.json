@@ -50,19 +50,19 @@
   },
   "build": {
     "appId": "com.stealthy.answerbot",
+    "productName": "Stealthy Answer Bot",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "package.json"
+    ],
     "win": {
       "target": "nsis",
-      "icon": "public/icon.png",
-      "productName": "Stealthy Answer Bot",
-      "directories": {
-        "output": "dist",
-        "buildResources": "build"
-      },
-      "files": [
-        "dist/**/*",
-        "main.js",
-        "package.json"
-      ]
+      "icon": "public/icon.png"
     }
   }
 }
