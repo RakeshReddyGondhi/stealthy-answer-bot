@@ -1,9 +1,8 @@
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import path from 'path';
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 let mainWindow;
 let overlayWindow;
 
@@ -19,7 +18,7 @@ function createWindow() {
     },
     frame: false,
     transparent: true,
-    icon: `${__dirname}/public/icon.png`
+        icon: path.join(app.getAppPath(), 'public/icon.png')
   });
 
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -33,7 +32,8 @@ function createWindow() {
     type: 'toolbar', focusable: false, hasShadow: false,
   });
 
-  overlayWindow.loadURL(`file://${__dirname}/dist/overlay.html`);
+    const overlayPath = path.join(app.getAppPath(), 'dist/overlay.html');
+    overlayWindow.loadURL(`file://${overlayPath}`);
   overlayWindow.setIgnoreMouseEvents(true);
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   setInterval(() => {
@@ -46,7 +46,8 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadURL(`file://${__dirname}/dist/index.html`);
+    const indexPath = path.join(app.getAppPath(), 'dist/index.html');
+    mainWindow.loadURL(`file://${indexPath}`);
   mainWindow.on('closed', () => {
     mainWindow = null;
     if (overlayWindow) overlayWindow.close();
