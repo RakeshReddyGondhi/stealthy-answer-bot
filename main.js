@@ -11,7 +11,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1,
     height: 1,
-    show: false,
+    show: true,
     skipTaskbar: true,
     webPreferences: {
       nodeIntegration: true,
