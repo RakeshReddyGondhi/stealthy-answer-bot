@@ -7,122 +7,146 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          created_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          user_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      help_requests: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          question: string
+          status: Database["public"]["Enums"]["request_status"]
+          admin_notes: string | null
+          approved_by: string | null
+          approved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          question: string
+          status?: Database["public"]["Enums"]["request_status"]
+          admin_notes?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          question?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          admin_notes?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_requests_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       ai_responses: {
         Row: {
-          created_at: string | null
           id: string
           request_id: string
           response_text: string
+          created_at: string
         }
         Insert: {
-          created_at?: string | null
           id?: string
           request_id: string
           response_text: string
+          created_at?: string
         }
         Update: {
-          created_at?: string | null
           id?: string
           request_id?: string
           response_text?: string
+          created_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "ai_responses_request_id_fkey"
             columns: ["request_id"]
-            isOneToOne: false
             referencedRelation: "help_requests"
             referencedColumns: ["id"]
-          },
+          }
         ]
-      }
-      help_requests: {
-        Row: {
-          admin_notes: string | null
-          approved_at: string | null
-          approved_by: string | null
-          created_at: string | null
-          id: string
-          question: string
-          status: Database["public"]["Enums"]["request_status"] | null
-          title: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          admin_notes?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string | null
-          id?: string
-          question: string
-          status?: Database["public"]["Enums"]["request_status"] | null
-          title: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          admin_notes?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string | null
-          id?: string
-          question?: string
-          status?: Database["public"]["Enums"]["request_status"] | null
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          email: string
-          full_name: string | null
-          id: string
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          full_name?: string | null
-          id: string
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          full_name?: string | null
-          id?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
       }
     }
     Views: {
@@ -131,8 +155,8 @@ export type Database = {
     Functions: {
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
       }

@@ -10,8 +10,8 @@ export class VoiceRecorder {
   private onSpeechDetected: (() => void) | null = null;
   private onSilenceDetected: ((audioBlob: Blob) => void) | null = null;
   
-  private readonly SILENCE_THRESHOLD = 30; // Audio level threshold
-  private readonly SILENCE_DURATION = 1500; // 1.5 seconds of silence
+  private readonly SILENCE_THRESHOLD = 12; // lowered threshold for better sensitivity
+  private readonly SILENCE_DURATION = 800; // 0.8 seconds of silence
 
   async initialize(
     onSpeechDetected: () => void,
@@ -71,11 +71,19 @@ export class VoiceRecorder {
     const checkAudioLevel = () => {
       if (!this.analyser || !this.dataArray) return;
 
-      const tempArray = new Uint8Array(this.analyser.frequencyBinCount);
-      this.analyser.getByteFrequencyData(tempArray);
-      const average = Array.from(tempArray).reduce((a, b) => a + b) / tempArray.length;
+      // Use time domain data to compute RMS which is more reliable for VAD
+      const timeData = new Uint8Array(this.analyser.fftSize);
+      this.analyser.getByteTimeDomainData(timeData);
 
-      if (average > this.SILENCE_THRESHOLD) {
+      // compute RMS
+      let sumSq = 0;
+      for (let i = 0; i < timeData.length; i++) {
+        const v = (timeData[i] - 128) / 128; // normalize to -1..1
+        sumSq += v * v;
+      }
+      const rms = Math.sqrt(sumSq / timeData.length) * 100; // scale to easier threshold
+
+      if (rms > this.SILENCE_THRESHOLD) {
         // Speech detected
         if (!this.isRecording) {
           this.startRecording();

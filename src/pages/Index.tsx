@@ -31,80 +31,92 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-full mb-6">
-            <Shield className="w-10 h-10 text-primary-foreground" />
-          </div>
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            AI Help Desk
+            AI Interview Assistant
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Secure, AI-powered assistance with voice and text. Get instant answers or submit requests for admin approval.
+            Voice-powered AI assistance for interviews
           </p>
         </div>
 
-        <div className="grid md:grid-cols-4 gap-6 mb-16 max-w-6xl mx-auto">
-          <Card className="shadow-[var(--shadow-card)] border-2 hover:border-primary/50 transition-[var(--transition-smooth)]">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
+          {/* User Section */}
+          <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
-              <Lock className="w-12 h-12 text-primary mb-4" />
-              <CardTitle>Admin Approval</CardTitle>
-              <CardDescription>
-                All requests go through admin review before AI assistance is provided
+              <div className="mb-4 flex justify-center">
+                <Users className="w-16 h-16 text-primary" />
+              </div>
+              <CardTitle className="text-2xl text-center">For Users</CardTitle>
+              <CardDescription className="text-center text-lg">
+                Get AI assistance during interviews
               </CardDescription>
             </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <Mic className="w-5 h-5 text-primary flex-shrink-0" />
+                  Voice input for natural questions
+                </li>
+                <li className="flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-primary flex-shrink-0" />
+                  Instant AI-powered answers
+                </li>
+                <li className="flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-primary flex-shrink-0" />
+                  Invisible during screen sharing
+                </li>
+              </ul>
+              <Button 
+                className="w-full mt-6" 
+                size="lg"
+                onClick={() => navigate('/auth')}
+              >
+                Install App
+              </Button>
+            </CardContent>
           </Card>
 
-          <Card className="shadow-[var(--shadow-card)] border-2 hover:border-primary/50 transition-[var(--transition-smooth)]">
+          {/* Admin Section */}
+          <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow border-primary">
             <CardHeader>
-              <Bot className="w-12 h-12 text-primary mb-4" />
-              <CardTitle>AI-Powered</CardTitle>
-              <CardDescription>
-                Get intelligent, contextual answers to your questions using advanced AI
+              <div className="mb-4 flex justify-center">
+                <Shield className="w-16 h-16 text-primary" />
+              </div>
+              <CardTitle className="text-2xl text-center">For Admins</CardTitle>
+              <CardDescription className="text-center text-lg">
+                Complete control over user access
               </CardDescription>
             </CardHeader>
-          </Card>
-
-          <Card className="shadow-[var(--shadow-card)] border-2 hover:border-primary/50 transition-[var(--transition-smooth)]">
-            <CardHeader>
-              <Mic className="w-12 h-12 text-primary mb-4" />
-              <CardTitle>Voice Chat</CardTitle>
-              <CardDescription>
-                Speak naturally and get instant AI responses - no login required
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="shadow-[var(--shadow-card)] border-2 hover:border-primary/50 transition-[var(--transition-smooth)]">
-            <CardHeader>
-              <Users className="w-12 h-12 text-primary mb-4" />
-              <CardTitle>User Dashboard</CardTitle>
-              <CardDescription>
-                Track your requests and view responses in a clean, organized interface
-              </CardDescription>
-            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary flex-shrink-0" />
+                  Monitor all active users
+                </li>
+                <li className="flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-primary flex-shrink-0" />
+                  Approve/deny access requests
+                </li>
+                <li className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary flex-shrink-0" />
+                  Real-time access control
+                </li>
+              </ul>
+              <Button 
+                className="w-full mt-6" 
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/auth')}
+              >
+                Admin Login
+              </Button>
+            </CardContent>
           </Card>
         </div>
 
-        <div className="text-center space-y-4">
-          <div className="flex gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/voice-chat')}
-              variant="outline"
-              className="text-lg px-8 py-6 shadow-[var(--shadow-elevated)]"
-            >
-              <Mic className="mr-2 h-5 w-5" />
-              Try Voice Chat
-            </Button>
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/auth')}
-              className="text-lg px-8 py-6 shadow-[var(--shadow-elevated)]"
-            >
-              Get Started
-            </Button>
-          </div>
+        <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            Try voice chat instantly or sign in for managed help desk access
+            Administrators must approve new users before they can access the system
           </p>
         </div>
       </div>

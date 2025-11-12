@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -24,14 +24,7 @@ const UserDashboard = () => {
   const [showNewRequest, setShowNewRequest] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (user) {
-      loadRequests();
-      subscribeToRequests();
-    }
-  }, [user]);
-
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
     const { data, error } = await supabase
       .from('help_requests')
       .select('*')
@@ -47,9 +40,9 @@ const UserDashboard = () => {
     } else {
       setRequests(data || []);
     }
-  };
+  }, [user?.id, toast]);
 
-  const subscribeToRequests = () => {
+  const subscribeToRequests = useCallback(() => {
     const channel = supabase
       .channel('user-requests')
       .on(
@@ -69,7 +62,7 @@ const UserDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  };
+  }, [user?.id, loadRequests]);
 
   const handleSignOut = async () => {
     await signOut();

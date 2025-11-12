@@ -71,3 +71,72 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Testing Admin Controls
+
+### Prerequisites
+1. Make sure you have Supabase CLI installed:
+```bash
+npm install -g supabase-cli
+```
+
+2. Start the Supabase services locally:
+```bash
+supabase start
+```
+
+### Database Migration
+1. Apply the database migration for admin controls:
+```bash
+supabase db reset
+```
+This will create the required `admin_controls` table and set up necessary permissions.
+
+### Testing Admin Controls
+1. Start the development server:
+```bash
+npm run dev
+```
+
+2. Open two browser windows:
+   - Window 1: Navigate to http://localhost:5173/auth and log in as an admin user
+   - Window 2: Navigate to http://localhost:5173/auth and log in as a regular user
+
+3. Run the admin control test script:
+```bash
+node scripts/test-admin-control.mjs
+```
+
+4. Test Scenarios:
+   - The script will perform these actions in sequence:
+     a. Lock global access (all users blocked)
+     b. Unlock global access
+     c. Deny specific user access
+     d. Allow specific user access
+     e. List current controls
+
+5. Expected Behavior:
+   - When global access is locked:
+     * All users should see "Access Temporarily Disabled"
+     * Voice chat interface should be disabled
+   - When specific user is denied:
+     * Only that user sees "Access Denied"
+     * Other users can continue using voice chat
+   - Changes should be reflected in real-time
+   - Admin dashboard should show current control status
+
+### Troubleshooting
+- If realtime updates aren't working, check:
+  1. Supabase connection in the browser console
+  2. Subscription status in the Network tab
+  3. Database permissions in Supabase dashboard
+- For any database errors, try:
+  ```bash
+  supabase db reset --linked
+  ```
+
+### Clean Up
+After testing, stop the Supabase services:
+```bash
+supabase stop
+```
