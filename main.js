@@ -9,9 +9,8 @@ let overlayWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1,
-    height: 1,
-    show: true,
+    width: 1200,
+    height: 800,    show: true,
     skipTaskbar: true,
     webPreferences: {
       nodeIntegration: true,
