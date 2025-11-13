@@ -1,9 +1,21 @@
+import fs from 'fs';
+import path from 'path';
 import axios from 'axios';
 import { ipcMain } from 'electron';
 
+function getConfig() {
+  try {
+    const configPath = path.join(process.cwd(), 'config.json');
+    const configData = fs.readFileSync(configPath, 'utf-8');
+    return JSON.parse(configData);
+  } catch (err) {
+    return { openaiApiKey: '' };
+  }
+}
+
 async function getAIAnswer(questionText) {
-  // OpenAI ChatGPT API example (replace with your API key, configurable)
-  const apiKey = process.env.OPENAI_API_KEY || 'YOUR_OPENAI_API_KEY';
+  const { openaiApiKey } = getConfig();
+  if (!openaiApiKey) return 'AI Error: API key missing!';
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
@@ -14,19 +26,17 @@ async function getAIAnswer(questionText) {
       },
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${openaiApiKey}`,
           'Content-Type': 'application/json',
         },
       }
     );
-    // Get first answer
     return response.data.choices[0].message.content.trim();
   } catch (err) {
     return 'AI error: ' + err.message;
   }
 }
 
-// Listen for transcripts from renderer and send AI answer to overlay
 ipcMain.on('question-from-voice', async (event, questionText) => {
   const answerText = await getAIAnswer(questionText);
   if (global.overlayWindow && !global.overlayWindow.isDestroyed()) {
