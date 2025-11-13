@@ -51,7 +51,7 @@ function createWindow() {
       contextIsolation: false,
       devTools: isDev
     },
-    focusable: false,
+    focusable: false, // Make overlay window click-through by default
     hasShadow: false,
     show: false
   });
@@ -80,10 +80,11 @@ function createWindow() {
       dialog.showErrorBox('Load Error', `Failed to load: ${err.message}`);
     });
 
-  // Load overlay window
+  // Load overlay window with click-through always enabled
   overlayWindow.loadURL(`file://${overlayPath}`)
     .then(() => {
       console.log('Overlay loaded');
+      // Overlay click-through by default
       overlayWindow.setIgnoreMouseEvents(true, { forward: true });
       if (isDev) {
         overlayWindow.show();
@@ -93,19 +94,18 @@ function createWindow() {
       console.error('Overlay load failed:', err);
     });
 
-  // IPC: Show answer
+  // IPC: Show answer (overlay always click-through for background app use)
   ipcMain.on('show-overlay-answer', (_, answer) => {
     if (overlayWindow && !overlayWindow.isDestroyed()) {
       console.log('Showing answer:', answer);
       overlayWindow.webContents.send('show-answer', answer);
       overlayWindow.show();
-      overlayWindow.setIgnoreMouseEvents(false); // Allow interaction
-      
+      overlayWindow.setIgnoreMouseEvents(true, { forward: true }); // Overlay always click-through
       // Auto-hide after 10 seconds
       setTimeout(() => {
         if (overlayWindow && !overlayWindow.isDestroyed()) {
           overlayWindow.hide();
-          overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+          overlayWindow.setIgnoreMouseEvents(true, { forward: true }); // Restores click-through
         }
       }, 10000);
     }
