@@ -44,6 +44,9 @@ function createWindow() {
     focusable: false,
     hasShadow: false,
     show: false
+
+  // Prevent overlay from being captured in screen sharing
+  global.overlayWindow.setContentProtection(true);
   });
 
   const indexPath = isDev
