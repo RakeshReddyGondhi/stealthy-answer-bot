@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { VoiceRecorder, blobToBase64 } from '@/utils/voiceRecorder';
 import { useAuth } from '@/hooks/useAuth';
 import useAdminControl from '@/hooks/useAdminControl';
+import { useSession } from '@/hooks/useSession';
 
 const VoiceChatInterface = () => {
   const recorderRef = useRef<VoiceRecorder | null>(null);
