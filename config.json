@@ -1,4 +1,6 @@
 {
   "name": "stealthy-answer-bot-config",
-  "openaiApiKey": "YOUR_OPENAI_API_KEY"
+  "aiProvider": "groq",
+  "groqApiKey": "YOUR_FREE_GROQ_API_KEY",
+  "groqModel": "llama-3.1-70b-versatile"
 }
