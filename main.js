@@ -20,8 +20,9 @@ function createMainWindow() {
     y: Math.round((height - 800) / 2),
     show: false,
     backgroundColor: "#ffffff",
-    icon: path.join(__dirname, "../public/icon.png"),
-    webPreferences: {
+    icon: isDev
+      ? path.join(__dirname, "public/icon.png")
+      : path.join(process.resourcesPath, "dist/icon.png"),    webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
