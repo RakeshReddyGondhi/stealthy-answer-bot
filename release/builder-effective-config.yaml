@@ -1,0 +1,16 @@
+directories:
+  output: release
+  buildResources: public
+appId: com.stealthy.answerbot
+productName: Stealthy Answer Bot
+files:
+  - filter:
+      - dist/**/*
+      - main.js
+      - preload.js
+      - preloadOverlay.js
+      - package.json
+win:
+  target: nsis
+  icon: public/icon.png
+electronVersion: 26.6.10

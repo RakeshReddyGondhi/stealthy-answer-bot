@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
 type UserSession = Database['public']['Tables']['user_sessions']['Row'];
 type SessionPayload = RealtimePostgresChangesPayload<{
-  [key: string]: any;
+  [key: string]: unknown;
   status?: 'pending' | 'approved' | 'denied';
 }>;
 
@@ -48,7 +48,7 @@ export const useSession = () => {
       return;
     }
 
-    let heartbeatInterval: NodeJS.Timer;
+    let heartbeatInterval: NodeJS.Timeout;
     let sessionSubscription: ReturnType<typeof supabase.channel>;
 
     const startSession = async () => {
@@ -128,8 +128,6 @@ export const useSession = () => {
   useEffect(() => {
     if (!user) return;
 
-    let blockSubscription: ReturnType<typeof supabase.channel>;
-
     const checkBlocked = async () => {
       try {
         const { data: isBlocked, error } = await supabase
@@ -145,7 +143,7 @@ export const useSession = () => {
       }
     };
 
-    blockSubscription = supabase
+    const blockSubscription = supabase
       .channel('user-blocks')
       .on(
         'postgres_changes',

@@ -1,5 +1,5 @@
 interface ElectronAPI {
-  send: (channel: string, ...args: any[]) => void;
+  send: (channel: string, ...args: unknown[]) => void;
 }
 
 declare global {

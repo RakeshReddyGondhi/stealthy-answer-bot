@@ -1,9 +1,5 @@
-import { app, BrowserWindow, ipcMain, screen } from "electron";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { app, BrowserWindow, ipcMain, screen } = require("electron");
+const path = require("path");
 
 let mainWindow = null;
 let overlayWindow = null;

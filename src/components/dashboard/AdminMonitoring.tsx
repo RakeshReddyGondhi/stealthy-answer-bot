@@ -32,11 +32,11 @@ const AdminMonitoring = () => {
               email
             )
           `)
-          .order('created_at', { ascending: false }) as { 
+          .order('created_at', { ascending: false }) as {
             data: (Database['public']['Tables']['user_sessions']['Row'] & {
               users: { email: string | null } | null
             })[] | null;
-            error: any;
+            error: Error;
           };
 
         if (error) {
