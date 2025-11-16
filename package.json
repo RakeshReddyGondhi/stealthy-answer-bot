@@ -76,6 +76,8 @@
     "files": [
       "dist/**/*",
       "main.js",
+            "preload.js",
+      "preloadOverlay.js",
       "package.json"
     ],
     "win": {
