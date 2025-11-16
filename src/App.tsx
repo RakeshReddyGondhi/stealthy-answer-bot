@@ -12,10 +12,26 @@ import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient();
 
+declare global {
+  interface Window {
+    electronAPI?: {
+      showOverlay: (text: string) => void;
+      hideOverlay: () => void;
+    };
+  }
+}
+
 const App = () => {
   const { appLocked } = useAdminControl();
   const { isAdmin } = useAuth();
   const showAppLocked = appLocked && !isAdmin;
+
+  // Example: show overlay when app is locked
+  if (showAppLocked && window.electronAPI) {
+    window.electronAPI.showOverlay("App is locked by admin. Access denied.");
+  } else if (window.electronAPI) {
+    window.electronAPI.hideOverlay();
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -24,7 +40,9 @@ const App = () => {
         <BrowserRouter>
           {showAppLocked ? (
             <div className="flex items-center justify-center min-h-screen">
-              <p className="text-lg font-semibold">App is locked by admin. Access denied.</p>
+              <p className="text-lg font-semibold">
+                App is locked by admin. Access denied.
+              </p>
             </div>
           ) : (
             <Routes>
