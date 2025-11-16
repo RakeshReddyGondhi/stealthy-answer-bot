@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import VoiceChatInterface from "./components/VoiceChatInterface";
 import useAdminControl from "@/hooks/useAdminControl";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
@@ -26,12 +27,14 @@ const App = () => {
   const { isAdmin } = useAuth();
   const showAppLocked = appLocked && !isAdmin;
 
-  // Example: show overlay when app is locked
-  if (showAppLocked && window.electronAPI) {
-    window.electronAPI.showOverlay("App is locked by admin. Access denied.");
-  } else if (window.electronAPI) {
-    window.electronAPI.hideOverlay();
-  }
+  // Use useEffect to handle overlay updates
+  useEffect(() => {
+    if (showAppLocked && window.electronAPI) {
+      window.electronAPI.showOverlay("App is locked by admin. Access denied.");
+    } else if (window.electronAPI) {
+      window.electronAPI.hideOverlay();
+    }
+  }, [showAppLocked]);
 
   return (
     <QueryClientProvider client={queryClient}>
