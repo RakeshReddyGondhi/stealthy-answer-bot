@@ -1,89 +1,103 @@
-// Entry for Electron main process: wires in AI handler and overlay
-import { app, BrowserWindow, ipcMain, screen } from 'electron';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import './src/aiAnswerHandler.js';
+import { app, BrowserWindow, ipcMain, screen } from "electron";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-let mainWindow;
-global.overlayWindow = null;
+let mainWindow = null;
+let overlayWindow = null;
 
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+const isDev = process.env.VITE_DEV_SERVER_URL !== undefined;
 
-function createWindow() {
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+function createMainWindow() {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    x: Math.floor((screenWidth - 1200) / 2),
-    y: Math.floor((screenHeight - 800) / 2),
+    x: Math.round((width - 1200) / 2),
+    y: Math.round((height - 800) / 2),
     show: false,
-    skipTaskbar: false,
-    backgroundColor: '#ffffff',
-    webPreferences: { nodeIntegration: true, contextIsolation: false, devTools: isDev },
-    frame: true,
-    transparent: false,
-    alwaysOnTop: false,
-    icon: path.join(__dirname, 'public', 'icon.png')
+    backgroundColor: "#ffffff",
+    icon: path.join(__dirname, "../public/icon.png"),
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      devTools: isDev,
+    },
   });
 
-  global.overlayWindow = new BrowserWindow({
-    width: 400,
-    height: 300,
-    x: screenWidth - 420,
-    y: screenHeight - 320,
-    transparent: true,
-    frame: false,
-    skipTaskbar: true,
-    alwaysOnTop: true,
-    webPreferences: { nodeIntegration: true, contextIsolation: false, devTools: isDev },
-    focusable: false,
-    hasShadow: false,
-    show: false
+  if (isDev) {
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    mainWindow.webContents.openDevTools();
+  } else {
+    mainWindow.loadFile(path.join(process.resourcesPath, "dist/index.html"));
+  }
 
-  // Prevent overlay from being captured in screen sharing
-  global.overlayWindow.setContentProtection(true);
-  });
+  mainWindow.once("ready-to-show", () => mainWindow.show());
 
-  const indexPath = isDev
-    ? path.join(__dirname, 'dist', 'index.html')
-    : path.join(process.resourcesPath, 'dist', 'index.html');
-  const overlayPath = isDev
-    ? path.join(__dirname, 'dist', 'overlay.html')
-    : path.join(process.resourcesPath, 'dist', 'overlay.html');
-
-  mainWindow.loadURL(`file://${indexPath}`).then(() => {
-    mainWindow.show();
-    if (isDev) mainWindow.webContents.openDevTools();
-  });
-
-  global.overlayWindow.loadURL(`file://${overlayPath}`).then(() => {
-    global.overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-    if (isDev) global.overlayWindow.show();
-  });
-
-  mainWindow.on('closed', () => {
+  mainWindow.on("closed", () => {
     mainWindow = null;
-    if (global.overlayWindow && !global.overlayWindow.isDestroyed()) {
-      global.overlayWindow.close();
-    }
-    global.overlayWindow = null;
   });
 }
 
-app.on('ready', createWindow);
-app.on('window-all-closed', () => {
-  ipcMain.removeAllListeners('show-overlay-answer');
-  ipcMain.removeAllListeners('hide-overlay');
-  if (process.platform !== 'darwin') app.quit();
+function createOverlayWindow() {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+
+  overlayWindow = new BrowserWindow({
+    width: 400,
+    height: 250,
+    x: width - 420,
+    y: height - 300,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    focusable: false,
+    hasShadow: false,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, "preloadOverlay.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      devTools: isDev,
+    },
+  });
+
+  overlayWindow.setContentProtection(true); // prevents screen capture
+
+  if (isDev) {
+    overlayWindow.loadURL(process.env.VITE_DEV_SERVER_URL + "/overlay.html");
+  } else {
+    overlayWindow.loadFile(
+      path.join(process.resourcesPath, "dist/overlay.html")
+    );
+  }
+
+  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+}
+
+app.whenReady().then(() => {
+  createMainWindow();
+  createOverlayWindow();
 });
-app.on('activate', () => {
-  if (!mainWindow) createWindow();
+
+// IPC from React → Electron
+ipcMain.on("overlay:show", (_, text) => {
+  overlayWindow.webContents.send("overlay:update", text);
+  overlayWindow.showInactive(); // show without taking focus
 });
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
+
+ipcMain.on("overlay:hide", () => {
+  overlayWindow.hide();
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
+});
+
+app.on("activate", () => {
+  if (!mainWindow) createMainWindow();
 });
