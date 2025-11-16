@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 
+declare global {
+  interface Window {
+    overlayAPI: {
+      onUpdate: (callback: (message: string) => void) => void;
+    };
+  }
+}
+
 const Overlay = () => {
   const [text, setText] = useState("");
 
